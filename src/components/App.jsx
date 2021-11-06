@@ -1,6 +1,6 @@
-import React from 'react';
+import React from "react";
 
-import { ethers } from 'ethers';
+import { ethers } from "ethers";
 
 // import SwapAIArtifact from "../contracts/SwapAI.json";
 // import contractAddress from "../contracts/contract-address.json";
@@ -8,14 +8,19 @@ import { ethers } from 'ethers';
 // import MockSwapAIArtifact from "../contracts/MockSwapAISwap.json";
 // import mockContractAddress from "../contracts/mock-contract-address.json";
 
-import { NoWalletDetected } from './NoWalletDetected';
-import { ConnectWallet } from './ConnectWallet';
+import { NoWalletDetected } from "./NoWalletDetected";
+import { ConnectWallet } from "./ConnectWallet";
+
+import Grid from '@material-ui/core/Grid';
+import GenericButton from './GenericButton';
+
+import Utils from '../Utils';
 
 // list of network ids https://docs.metamask.io/guide/ethereum-provider.html#properties
-const HARDHAT_NETWORK_ID = '31337';
-const MAINNET_ID = '1';
-const KOVAN_ID = '42';
-const NETWORK_ERR_MSG = 'Please connect Metamask to Localhost:8545, mainnet, or Kovan';
+const HARDHAT_NETWORK_ID = "31337";
+const MAINNET_ID = "1";
+const KOVAN_ID = "42";
+const NETWORK_ERR_MSG = "Please connect Metamask to Localhost:8545, mainnet, or Kovan";
 
 class App extends React.Component {
   constructor(props) {
@@ -26,7 +31,8 @@ class App extends React.Component {
       transactionError: undefined,
       networkError: undefined,
       optInStatus: false,
-      blockchainMessages: []
+      blockchainMessages: [],
+      utils: undefined
     };
 
     this.state = this.initialState;
@@ -64,7 +70,7 @@ class App extends React.Component {
 
     // We first store the user's address in the component's state
     this.setState({
-      selectedAddress: userAddress
+      selectedAddress: userAddress,
     });
 
     // Then, we initialize ethers
@@ -75,7 +81,7 @@ class App extends React.Component {
     //connects dapp to wallet when user clicks on connect wallet button
 
     const [selectedAddress] = await window.ethereum.enable();
-    console.log('selectedAddress',selectedAddress);
+    console.log("selectedAddress", selectedAddress);
     // Once we have the address, we can initialize the application.
 
     if (!this.checkNetwork()) {
@@ -85,7 +91,7 @@ class App extends React.Component {
     this.initialize(selectedAddress);
 
     // We reinitialize it whenever the user changes their account.
-    window.ethereum.on('accountsChanged', ([newAddress]) => {
+    window.ethereum.on("accountsChanged", ([newAddress]) => {
       // `accountsChanged` event can be triggered with an undefined newAddress.
       // This happens when the user removes the Dapp from the "Connected
       // list of sites allowed access to your addresses" (Metamask > Settings > Connections)
@@ -98,7 +104,7 @@ class App extends React.Component {
     });
 
     // We reset the dapp state if the network is changed
-    window.ethereum.on('networkChanged', () => {
+    window.ethereum.on("networkChanged", () => {
       this.resetState();
     });
   }
@@ -110,7 +116,11 @@ class App extends React.Component {
 
   // This method checks if Metamask selected network is Localhost:8545, mainnet, or Kovan
   checkNetwork() {
-    if (window.ethereum.networkVersion === HARDHAT_NETWORK_ID || window.ethereum.networkVersion === MAINNET_ID || window.ethereum.networkVersion === KOVAN_ID) {
+    if (
+      window.ethereum.networkVersion === HARDHAT_NETWORK_ID ||
+      window.ethereum.networkVersion === MAINNET_ID ||
+      window.ethereum.networkVersion === KOVAN_ID
+    ) {
       return true;
     }
 
@@ -119,6 +129,14 @@ class App extends React.Component {
     });
 
     return false;
+  }
+
+  async updateCreateUser() {
+    let createUserStatus = await this.state.utils.createUser();
+    console.log("this.state.createUserStatus", this.state.createUserStatus);
+    this.setState(prevState => ({
+      blockchainMessages: [...prevState.blockchainMessages, `User added to app status: ${createUserStatus}`]
+    }));
   }
 
   render() {
@@ -138,7 +156,41 @@ class App extends React.Component {
       );
     }
 
-    return (<div>Hello!</div>
+    let optInStatusLabel = this.state.optInStatus ? 'Out of' : 'In to';
+
+    return (
+      <div
+        style={{
+          position: "absolute",
+          left: "50%",
+          top: "50%",
+          transform: "translate(-50%, -50%)",
+          display: "inline-block",
+        }}
+      >
+        <Grid container direction="row" justify="center" alignItems="center">
+          <GenericButton
+            onClick={() => this.updateCreateUser()}
+            label="Register Account"
+          />
+          <GenericButton
+            onClick={() => this.updateDepositState()}
+            label="Refresh Deposits"
+          />
+          <GenericButton
+            onClick={() => this.updateSwapStablecoinDeposit(false)}
+            label="Force Swap TUSD -> WBTC"
+          />
+          <GenericButton
+            onClick={() => this.updateSwapStablecoinDeposit(true)}
+            label="FForce Swap TUSD -> WBTC"
+          />
+          <GenericButton
+            onClick={() => this.updateOptInToggle()}
+            label={`Opt ${optInStatusLabel} automatic swapping`}
+          />
+        </Grid>
+      </div>
     );
   }
 }
