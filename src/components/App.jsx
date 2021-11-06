@@ -21,7 +21,8 @@ const HARDHAT_NETWORK_ID = "31337";
 const MAINNET_ID = "1";
 const KOVAN_ID = "42";
 const NETWORK_ERR_MSG = "Please connect Metamask to Localhost:8545, mainnet, or Kovan";
-
+const WBTC = "WBTC";
+const TUSD = "TUSD";
 class App extends React.Component {
   constructor(props) {
     super(props);
@@ -59,6 +60,7 @@ class App extends React.Component {
       // console.log("SwapAI Kovan address", contractAddress);
     }
     console.log("networkVersion", window.ethereum.networkVersion);
+    this.setState({utils: new Utils(this.swapAI, this.provider, this.state.selectedAddress)});
   }
 
   dismissNetworkError() {
@@ -178,12 +180,20 @@ class App extends React.Component {
             label="Refresh Deposits"
           />
           <GenericButton
-            onClick={() => this.updateSwapStablecoinDeposit(false)}
-            label="Force Swap TUSD -> WBTC"
+            onClick={() => this.updateAddDeposit(WBTC)}
+            label="Deposit WBTC"
           />
           <GenericButton
-            onClick={() => this.updateSwapStablecoinDeposit(true)}
-            label="FForce Swap TUSD -> WBTC"
+            onClick={() => this.updateAddDeposit(TUSD)}
+            label="Deposit TUSD"
+          />
+          <GenericButton
+            onClick={() => this.updateSwapDeposit(TUSD, WBTC)}
+            label="Force Swap TUSD -> WBTC"
+          />4
+          <GenericButton
+            onClick={() => this.updateSwapStablecoinDeposit(WBTC, TUSD)}
+            label="Force Swap TUSD -> WBTC"
           />
           <GenericButton
             onClick={() => this.updateOptInToggle()}
