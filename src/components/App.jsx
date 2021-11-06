@@ -13,6 +13,7 @@ import GenericButton from "./GenericButton";
 
 import { TUSD, WBTC } from "../Constants";
 import Utils from "../Utils";
+import BlockchainMessagesTable from "./BlockchainMessagesTable";
 
 // import SwapAIArtifact from "../contracts/SwapAI.json";
 // import contractAddress from "../contracts/contract-address.json";
@@ -196,9 +197,9 @@ class App extends React.Component {
   }
 
   async updateSwapSingleUserBalance(coinSwapFrom, coinSwapTo) {
+    // TODO: extract data from swapSingleUserBalanceSummary here + update state & log
     let swapSingleUserBalanceResult =
       await this.state.utils.swapSingleUserBalance(coinSwapFrom, coinSwapTo);
-    // TODO: extract data from swapSingleUserBalanceSummary here + update state & log
   }
 
   render() {
@@ -258,6 +259,11 @@ class App extends React.Component {
           <GenericButton
             onClick={() => this.updateSwapDeposit(WBTC, TUSD)}
             label="Force Swap TUSD -> WBTC"
+          />
+        </Grid>
+        <Grid container direction="row" justify="center" alignItems="center">
+          <BlockchainMessagesTable
+            blockchainMessages={this.state.blockchainMessages}
           />
         </Grid>
       </div>

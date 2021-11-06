@@ -108,7 +108,9 @@ class Utils {
     return depositMap;
   }
 
-  async updateSwapSingleUserBalance() {}
+  async updateSwapSingleUserBalance() {
+    // TODO: figure out if need to "initialize" OracleCaller contract like SwapAI in order to extract event data, have asked in Chainlink Discord
+  }
 }
 
 export default Utils;
