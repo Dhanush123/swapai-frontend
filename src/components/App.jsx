@@ -2,9 +2,6 @@ import React from "react";
 
 import { ethers } from "ethers";
 
-// import SwapAIArtifact from "../contracts/SwapAI.json";
-// import contractAddress from "../contracts/contract-address.json";
-
 // import MockSwapAIArtifact from "../contracts/MockSwapAISwap.json";
 // import mockContractAddress from "../contracts/mock-contract-address.json";
 
@@ -14,7 +11,12 @@ import { ConnectWallet } from "./ConnectWallet";
 import Grid from "@material-ui/core/Grid";
 import GenericButton from "./GenericButton";
 
+import { TUSD, WBTC } from "../Constants";
 import Utils from "../Utils";
+
+// import SwapAIArtifact from "../contracts/SwapAI.json";
+// import contractAddress from "../contracts/contract-address.json";
+const contractAddress = { SwapAI: "TODOIMPORTABOVE" };
 
 // list of network ids https://docs.metamask.io/guide/ethereum-provider.html#properties
 const HARDHAT_NETWORK_ID = "31337";
@@ -22,8 +24,6 @@ const MAINNET_ID = "1";
 const KOVAN_ID = "42";
 const NETWORK_ERR_MSG =
   "Please connect Metamask to Localhost:8545, mainnet, or Kovan";
-const WBTC = "WBTC";
-const TUSD = "TUSD";
 class App extends React.Component {
   constructor(props) {
     super(props);
@@ -138,13 +138,67 @@ class App extends React.Component {
 
   async updateCreateUser() {
     let createUserStatus = await this.state.utils.createUser();
-    console.log("this.state.createUserStatus", this.state.createUserStatus);
+    console.log(
+      "updateCreateUser this.state.createUserStatus",
+      this.state.createUserStatus
+    );
     this.setState((prevState) => ({
       blockchainMessages: [
         ...prevState.blockchainMessages,
-        `User added to app status: ${createUserStatus}`,
+        `User registration status: ${createUserStatus}`,
       ],
     }));
+  }
+
+  async updateOptInToggle() {
+    let newOptInStatus = await this.state.utils.optInToggle();
+    this.setState({ optInStatus: newOptInStatus }, () => {
+      console.log(
+        "updateOptInToggle this.state.optInStatus",
+        this.state.optInStatus
+      );
+      this.setState((prevState) => ({
+        blockchainMessages: [
+          ...prevState.blockchainMessages,
+          `User opt-in status for auto-swapping TUSD <-> WBTC: ${this.state.optInStatus}`,
+        ],
+      }));
+    });
+  }
+
+  async updateGetUserBalance() {
+    let userBalanceResultMap = await this.state.utils.getUserBalance(
+      this.state.selectedAddress
+    );
+    let tusdBalance = userBalanceResultMap[TUSD];
+    let wbtcBalance = userBalanceResultMap[WBTC];
+    this.setState((prevState) => ({
+      blockchainMessages: [
+        ...prevState.blockchainMessages,
+        `${TUSD} balance: ${tusdBalance}, ${WBTC}: ${wbtcBalance}`,
+      ],
+    }));
+  }
+
+  async updateAddDeposit(coinNameToDeposit) {
+    let addDepositResultMap = await this.state.utils.addDeposit(
+      contractAddress.SwapAI,
+      coinNameToDeposit
+    );
+    let oldBalance = addDepositResultMap["oldBalance"];
+    let newBalance = addDepositResultMap["newBalance"];
+    this.setState((prevState) => ({
+      blockchainMessages: [
+        ...prevState.blockchainMessages,
+        `${coinNameToDeposit}: ${oldBalance} -> ${newBalance} balance`,
+      ],
+    }));
+  }
+
+  async updateSwapSingleUserBalance(coinSwapFrom, coinSwapTo) {
+    let swapSingleUserBalanceResult =
+      await this.state.utils.swapSingleUserBalance(coinSwapFrom, coinSwapTo);
+    // TODO: extract data from swapSingleUserBalanceSummary here + update state & log
   }
 
   render() {
@@ -182,29 +236,28 @@ class App extends React.Component {
             label="Register Account"
           />
           <GenericButton
-            onClick={() => this.updateDepositState()}
-            label="Refresh Deposits"
+            onClick={() => this.updateOptInToggle()}
+            label={`Opt ${optInStatusLabel} automatic swapping`}
           />
           <GenericButton
-            onClick={() => this.updateAddDeposit(WBTC)}
-            label="Deposit WBTC"
+            onClick={() => this.updateGetUserBalance()}
+            label="Refresh Balance"
           />
           <GenericButton
             onClick={() => this.updateAddDeposit(TUSD)}
             label="Deposit TUSD"
           />
           <GenericButton
+            onClick={() => this.updateAddDeposit(WBTC)}
+            label="Deposit WBTC"
+          />
+          <GenericButton
             onClick={() => this.updateSwapDeposit(TUSD, WBTC)}
             label="Force Swap TUSD -> WBTC"
           />
-          4
           <GenericButton
-            onClick={() => this.updateSwapStablecoinDeposit(WBTC, TUSD)}
+            onClick={() => this.updateSwapDeposit(WBTC, TUSD)}
             label="Force Swap TUSD -> WBTC"
-          />
-          <GenericButton
-            onClick={() => this.updateOptInToggle()}
-            label={`Opt ${optInStatusLabel} automatic swapping`}
           />
         </Grid>
       </div>
