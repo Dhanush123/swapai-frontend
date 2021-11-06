@@ -11,16 +11,17 @@ import { ethers } from "ethers";
 import { NoWalletDetected } from "./NoWalletDetected";
 import { ConnectWallet } from "./ConnectWallet";
 
-import Grid from '@material-ui/core/Grid';
-import GenericButton from './GenericButton';
+import Grid from "@material-ui/core/Grid";
+import GenericButton from "./GenericButton";
 
-import Utils from '../Utils';
+import Utils from "../Utils";
 
 // list of network ids https://docs.metamask.io/guide/ethereum-provider.html#properties
 const HARDHAT_NETWORK_ID = "31337";
 const MAINNET_ID = "1";
 const KOVAN_ID = "42";
-const NETWORK_ERR_MSG = "Please connect Metamask to Localhost:8545, mainnet, or Kovan";
+const NETWORK_ERR_MSG =
+  "Please connect Metamask to Localhost:8545, mainnet, or Kovan";
 const WBTC = "WBTC";
 const TUSD = "TUSD";
 class App extends React.Component {
@@ -33,7 +34,7 @@ class App extends React.Component {
       networkError: undefined,
       optInStatus: false,
       blockchainMessages: [],
-      utils: undefined
+      utils: undefined,
     };
 
     this.state = this.initialState;
@@ -60,7 +61,9 @@ class App extends React.Component {
       // console.log("SwapAI Kovan address", contractAddress);
     }
     console.log("networkVersion", window.ethereum.networkVersion);
-    this.setState({utils: new Utils(this.swapAI, this.provider, this.state.selectedAddress)});
+    this.setState({
+      utils: new Utils(this.swapAI, this.provider, this.state.selectedAddress),
+    });
   }
 
   dismissNetworkError() {
@@ -136,8 +139,11 @@ class App extends React.Component {
   async updateCreateUser() {
     let createUserStatus = await this.state.utils.createUser();
     console.log("this.state.createUserStatus", this.state.createUserStatus);
-    this.setState(prevState => ({
-      blockchainMessages: [...prevState.blockchainMessages, `User added to app status: ${createUserStatus}`]
+    this.setState((prevState) => ({
+      blockchainMessages: [
+        ...prevState.blockchainMessages,
+        `User added to app status: ${createUserStatus}`,
+      ],
     }));
   }
 
@@ -158,7 +164,7 @@ class App extends React.Component {
       );
     }
 
-    let optInStatusLabel = this.state.optInStatus ? 'Out of' : 'In to';
+    let optInStatusLabel = this.state.optInStatus ? "Out of" : "In to";
 
     return (
       <div
@@ -190,7 +196,8 @@ class App extends React.Component {
           <GenericButton
             onClick={() => this.updateSwapDeposit(TUSD, WBTC)}
             label="Force Swap TUSD -> WBTC"
-          />4
+          />
+          4
           <GenericButton
             onClick={() => this.updateSwapStablecoinDeposit(WBTC, TUSD)}
             label="Force Swap TUSD -> WBTC"
