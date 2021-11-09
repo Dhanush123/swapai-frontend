@@ -15,16 +15,12 @@ import { TUSD, WBTC } from "../Constants";
 import Utils from "../Utils";
 import BlockchainMessagesTable from "./BlockchainMessagesTable";
 
-// import SwapAIArtifact from "../contracts/SwapAI.json";
-// import contractAddress from "../contracts/contract-address.json";
-const contractAddress = { SwapAI: "TODOIMPORTABOVE" };
+import SwapAIArtifact from "../contracts/SwapAI.json";
+import contractAddress from "../contracts/contract-address.json";
 
 // list of network ids https://docs.metamask.io/guide/ethereum-provider.html#properties
-const HARDHAT_NETWORK_ID = "31337";
-const MAINNET_ID = "1";
 const KOVAN_ID = "42";
-const NETWORK_ERR_MSG =
-  "Please connect Metamask to Localhost:8545, mainnet, or Kovan";
+const NETWORK_ERR_MSG = "Please connect Metamask to Kovan";
 class App extends React.Component {
   constructor(props) {
     super(props);
@@ -54,12 +50,12 @@ class App extends React.Component {
     // }
     if (window.ethereum.networkVersion === KOVAN_ID) {
       // TODO: uncomment once added contract abi to this repo
-      // this.swapAI = new ethers.Contract(
-      //   contractAddress.SwapAI,
-      //   SwapAIArtifact.abi,
-      //   this.provider.getSigner(0)
-      // );
-      // console.log("SwapAI Kovan address", contractAddress);
+      this.swapAI = new ethers.Contract(
+        contractAddress.SwapAI,
+        SwapAIArtifact.abi,
+        this.provider.getSigner(0)
+      );
+      console.log("SwapAI Kovan address", contractAddress);
     }
     console.log("networkVersion", window.ethereum.networkVersion);
     this.setState({
@@ -122,11 +118,7 @@ class App extends React.Component {
 
   // This method checks if Metamask selected network is Localhost:8545, mainnet, or Kovan
   checkNetwork() {
-    if (
-      window.ethereum.networkVersion === HARDHAT_NETWORK_ID ||
-      window.ethereum.networkVersion === MAINNET_ID ||
-      window.ethereum.networkVersion === KOVAN_ID
-    ) {
+    if (window.ethereum.networkVersion === KOVAN_ID) {
       return true;
     }
 
@@ -236,10 +228,10 @@ class App extends React.Component {
             onClick={() => this.updateCreateUser()}
             label="Register Account"
           />
-          <GenericButton
+          {/* <GenericButton
             onClick={() => this.updateOptInToggle()}
             label={`Opt ${optInStatusLabel} automatic swapping`}
-          />
+          /> */}
           <GenericButton
             onClick={() => this.updateGetUserBalance()}
             label="Refresh Balance"

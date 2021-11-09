@@ -4,18 +4,13 @@ import { TUSD, WBTC } from "./Constants";
 require("dotenv").config();
 
 class Utils {
-  constructor(swapAI, provider, address) {
+  constructor(swapAI, address) {
     this.swapAI = swapAI;
-    this.provider = provider;
-    this.address = address;
-    this.httpProvider = new Web3.providers.HttpProvider(
-      process.env.KOVAN_RPC_URL
-    );
-    console.log("httpProvider", this.httpProvider);
   }
 
   async createUser() {
     try {
+      console.log("this.swapAI.createUser", this.swapAI.createUser.toString());
       let tx = await this.swapAI.createUser();
       let txwait = await tx.wait();
       console.log("createUser response!", txwait);
@@ -40,7 +35,7 @@ class Utils {
 
   async getUserBalance(userAddress) {
     try {
-      let tx = await this.swapAI.getUserBalance();
+      let tx = await this.swapAI.fetchUserBalance();
       let txwait = await tx.wait();
       console.log("getUserBalance response!", txwait);
 
@@ -72,14 +67,14 @@ class Utils {
   async addDeposit(toAddress, coinNameToDeposit) {
     let tokenAmt;
     let decimals;
+    let transferResult
     if (coinNameToDeposit === TUSD) {
       decimals = 18;
-      tokenAmt = ethers.utils.parseUnits(1, decimals);
+      transferResult = await this.swapAI.depositTUSD();
     } else if (coinNameToDeposit === WBTC) {
       decimals = 8;
-      tokenAmt = ethers.utils.parseUnits(0.0001, decimals);
+      transferResult = await this.swapAI.depositWBTC();
     }
-    let transferResult = await this.swapAI.transfer(toAddress, tokenAmt);
     console.log("addDeposit response!", transferResult);
     let filterValues;
     if (coinNameToDeposit === TUSD) {
