@@ -1,0 +1,20 @@
+{
+  "files": {
+    "main.css": "/swapai-frontend/static/css/main.6dea0f05.chunk.css",
+    "main.js": "/swapai-frontend/static/js/main.453e11a1.chunk.js",
+    "main.js.map": "/swapai-frontend/static/js/main.453e11a1.chunk.js.map",
+    "runtime-main.js": "/swapai-frontend/static/js/runtime-main.894b2f8a.js",
+    "runtime-main.js.map": "/swapai-frontend/static/js/runtime-main.894b2f8a.js.map",
+    "static/js/2.f2c6b7f7.chunk.js": "/swapai-frontend/static/js/2.f2c6b7f7.chunk.js",
+    "static/js/2.f2c6b7f7.chunk.js.map": "/swapai-frontend/static/js/2.f2c6b7f7.chunk.js.map",
+    "index.html": "/swapai-frontend/index.html",
+    "static/css/main.6dea0f05.chunk.css.map": "/swapai-frontend/static/css/main.6dea0f05.chunk.css.map",
+    "static/js/2.f2c6b7f7.chunk.js.LICENSE.txt": "/swapai-frontend/static/js/2.f2c6b7f7.chunk.js.LICENSE.txt"
+  },
+  "entrypoints": [
+    "static/js/runtime-main.894b2f8a.js",
+    "static/js/2.f2c6b7f7.chunk.js",
+    "static/css/main.6dea0f05.chunk.css",
+    "static/js/main.453e11a1.chunk.js"
+  ]
+}
