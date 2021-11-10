@@ -59,7 +59,7 @@ class App extends React.Component {
     }
     console.log("networkVersion", window.ethereum.networkVersion);
     this.setState({
-      utils: new Utils(this.swapAI, this.provider, this.state.selectedAddress),
+      utils: new Utils(this.swapAI, this.state.selectedAddress, this.provider),
     });
   }
 

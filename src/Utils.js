@@ -1,10 +1,12 @@
 import { ethers } from "ethers";
 import Web3 from "web3";
-import { TUSD, WBTC } from "./Constants";
+import { TUSD, WBTC, TUSD_KOVAN_ADDRESS, WBTC_KOVAN_ADDRESS } from "./Constants";
 require("dotenv").config();
 
 class Utils {
-  constructor(swapAI, address) {
+  constructor(swapAI, userAddress, provider) {
+    this.provider = provider;
+    this.userAddress = userAddress;
     this.swapAI = swapAI;
   }
 
@@ -65,15 +67,23 @@ class Utils {
   }
 
   async addDeposit(toAddress, coinNameToDeposit) {
-    let tokenAmt;
+    let abi = ["function approve(address _spender, uint256 _value) public returns (bool success)"]
+    let wei;
     let decimals;
-    let transferResult
+    let transferResult;
+    let tokenContract;
     if (coinNameToDeposit === TUSD) {
       decimals = 18;
-      transferResult = await this.swapAI.depositTUSD();
+      tokenContract = new ethers.Contract(TUSD_KOVAN_ADDRESS, abi, this.provider.getSigner(0));
+      wei = ethers.utils.parseEther((10 * 10**decimals).toString());
+      await tokenContract.approve(this.userAddress, wei);
+      transferResult = await this.swapAI.depositTUSD(wei);
     } else if (coinNameToDeposit === WBTC) {
       decimals = 8;
-      transferResult = await this.swapAI.depositWBTC();
+      tokenContract = new ethers.Contract(WBTC_KOVAN_ADDRESS, abi, this.provider.getSigner(0));
+      wei = ethers.utils.parseEther((10**-4).toString());
+      await tokenContract.approve(this.userAddress, wei);
+      transferResult = await this.swapAI.depositWBTC(wei);
     }
     console.log("addDeposit response!", transferResult);
     let filterValues;
