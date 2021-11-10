@@ -2,7 +2,7 @@
   "name": "swapai-frontend",
   "version": "0.1.0",
   "private": true,
-  "homepage": "http://dhanush123.github.io/swapai-frontend",
+  "homepage": "https://dhanush123.github.io/swapai-frontend",
   "repo": "https://github.com/Dhanush123/swapai-frontend.git",
   "dependencies": {
     "@material-ui/core": "^4.12.3",
