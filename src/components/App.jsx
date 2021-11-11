@@ -2,9 +2,6 @@ import React from "react";
 
 import { ethers } from "ethers";
 
-// import MockSwapAIArtifact from "../contracts/MockSwapAISwap.json";
-// import mockContractAddress from "../contracts/mock-contract-address.json";
-
 import { NoWalletDetected } from "./NoWalletDetected";
 import { ConnectWallet } from "./ConnectWallet";
 
@@ -40,16 +37,7 @@ class App extends React.Component {
   async intializeEthers() {
     // We first initialize ethers by creating a provider using window.ethereum
     this.provider = new ethers.providers.Web3Provider(window.ethereum);
-    // TODO: uncomment once created mock contract
-    // if (window.ethereum.networkVersion === HARDHAT_NETWORK_ID) {
-    //   this.swapAI = new ethers.Contract(
-    //     mockContractAddress.MockSwapAI,
-    //     MockSwapAIArtifact.abi,
-    //     this.provider.getSigner(0)
-    //   );
-    // }
     if (window.ethereum.networkVersion === KOVAN_ID) {
-      // TODO: uncomment once added contract abi to this repo
       this.swapAI = new ethers.Contract(
         contractAddress.SwapAI,
         SwapAIArtifact.abi,
@@ -145,18 +133,22 @@ class App extends React.Component {
 
   async updateOptInToggle() {
     let newOptInStatus = await this.state.utils.optInToggle();
-    this.setState({ optInStatus: newOptInStatus }, () => {
-      console.log(
-        "updateOptInToggle this.state.optInStatus",
-        this.state.optInStatus
-      );
-      this.setState((prevState) => ({
+
+    this.setState(
+      (prevState) => ({
+        optInStatus: newOptInStatus,
         blockchainMessages: [
           ...prevState.blockchainMessages,
           `User opt-in status for auto-swapping TUSD <-> WBTC: ${this.state.optInStatus}`,
         ],
-      }));
-    });
+      }),
+      () => {
+        console.log(
+          "updateOptInToggle this.state.optInStatus",
+          this.state.optInStatus
+        );
+      }
+    );
   }
 
   async updateGetUserBalance() {
@@ -175,7 +167,6 @@ class App extends React.Component {
 
   async updateAddDeposit(coinNameToDeposit) {
     let addDepositResultMap = await this.state.utils.addDeposit(
-      contractAddress.SwapAI,
       coinNameToDeposit
     );
     let oldBalance = addDepositResultMap["oldBalance"];
@@ -189,9 +180,40 @@ class App extends React.Component {
   }
 
   async updateSwapSingleUserBalance(coinSwapFrom, coinSwapTo) {
-    // TODO: extract data from swapSingleUserBalanceSummary here + update state & log
-    let swapSingleUserBalanceResult =
+    let swapSingleUserBalanceStatusMap =
       await this.state.utils.swapSingleUserBalance(coinSwapFrom, coinSwapTo);
+    let tusdRatio,
+      btcSentiment,
+      btcPriceCurrent,
+      btcPricePrediction,
+      isNegativeFuture,
+      isPositiveFuture,
+      user;
+    [
+      tusdRatio,
+      btcSentiment,
+      btcPriceCurrent,
+      btcPricePrediction,
+      isNegativeFuture,
+      isPositiveFuture,
+      user,
+    ] = swapSingleUserBalanceStatusMap;
+    let userMsg = `address: ${user[0]}, BTC balance: ${(
+      user[1] /
+      10 ** 8
+    ).toFixed(2)}, TUSD balance: ${(user[2] / 10 ** 18).toFixed(2)}`; // TODO: show optInStatus later
+    this.setState((prevState) => ({
+      blockchainMessages: [
+        ...prevState.blockchainMessages,
+        `TUSD asset/reserve ratio: ${tusdRatio},\n
+        BTC 24 hour sentiment in [negative, positive] range [-1,1]: ${btcSentiment},\n
+        BTC current price: ${btcPriceCurrent},\n
+        BTC price 24 hour prediction: ${btcPricePrediction},\n
+        BTC very negative outlook prediction: ${isNegativeFuture},\n
+        BTC very positive outlook prediction: ${isPositiveFuture},\n
+        Swapped user data: ${userMsg}`,
+      ],
+    }));
   }
 
   render() {
@@ -228,10 +250,10 @@ class App extends React.Component {
             onClick={() => this.updateCreateUser()}
             label="Register Account"
           />
-          {/* <GenericButton
+          <GenericButton
             onClick={() => this.updateOptInToggle()}
             label={`Opt ${optInStatusLabel} automatic swapping`}
-          /> */}
+          />
           <GenericButton
             onClick={() => this.updateGetUserBalance()}
             label="Refresh Balance"
