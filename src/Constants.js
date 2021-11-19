@@ -1,7 +1,9 @@
+import contractData from "./contracts/contract-address.json";
+
 const TUSD = "TUSD";
 const WBTC = "WBTC";
-const TUSD_KOVAN_ADDRESS = "0x016750AC630F711882812f24Dba6c95b9D35856d";
-const WBTC_KOVAN_ADDRESS = "0xa0a5ad2296b38bd3e3eb59aaeaf1589e8d9a29a9";
+const TUSD_KOVAN_ADDRESS = contractData["TUSDToken"];
+const WBTC_KOVAN_ADDRESS = contractData["BTCToken"];
 
 export {
   TUSD, WBTC, TUSD_KOVAN_ADDRESS, WBTC_KOVAN_ADDRESS
