@@ -1,11 +1,20 @@
 /* eslint-disable react/prop-types */
 import React from "react";
 
-import { NetworkErrorMessage } from "./NetworkErrorMessage";
+import NetworkErrorMessage from "./NetworkErrorMessage";
+import GenericButton from "./GenericButton";
 
-export function ConnectWallet({ connectWallet, networkError, dismiss }) {
+function ConnectWallet({ connectWallet, networkError, dismiss }) {
   return (
-    <div className="container">
+    <div className="container"
+      style={{
+        position: "absolute",
+        left: "50%",
+        top: "50%",
+        transform: "translate(-50%, -50%)",
+        display: "inline-block",
+      }}
+    >
       <div className="row justify-content-md-center">
         <div className="col-12 text-center">
           {networkError && (
@@ -17,15 +26,16 @@ export function ConnectWallet({ connectWallet, networkError, dismiss }) {
         </div>
         <div className="col-6 p-4 text-center">
           <p>Please connect to your wallet.</p>
-          <button
+          <GenericButton
             className="btn btn-warning"
             type="button"
             onClick={connectWallet}
-          >
-            Connect Wallet
-          </button>
+            label="Connect Wallet"
+          />
         </div>
       </div>
     </div>
   );
 }
+
+export default React.memo(ConnectWallet);

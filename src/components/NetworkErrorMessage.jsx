@@ -1,7 +1,7 @@
 /* eslint-disable react/prop-types */
 import React from "react";
 
-export function NetworkErrorMessage({ message, dismiss }) {
+function NetworkErrorMessage({ message, dismiss }) {
   return (
     <div className="alert alert-danger" role="alert">
       {message}
@@ -17,3 +17,5 @@ export function NetworkErrorMessage({ message, dismiss }) {
     </div>
   );
 }
+
+export default React.memo(NetworkErrorMessage);

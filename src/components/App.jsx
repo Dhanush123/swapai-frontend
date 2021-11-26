@@ -2,22 +2,24 @@ import React from "react";
 
 import { ethers } from "ethers";
 
-import { NoWalletDetected } from "./NoWalletDetected";
-import { ConnectWallet } from "./ConnectWallet";
+import Grid from "@mui/material/Grid";
+import Box from "@mui/material/Box";
 
-import Grid from "@material-ui/core/Grid";
+import PriceChart from "./PriceChart";
+
+// import NavigationBar from "./NavigationBar";
 import GenericButton from "./GenericButton";
 
-import { TUSD, WBTC } from "../Constants";
-import Utils from "../Utils";
-import BlockchainMessagesTable from "./BlockchainMessagesTable";
+import NoWalletDetected from "./NoWalletDetected";
+import ConnectWallet from "./ConnectWallet";
+import BlockchainLogsTable from "./BlockchainLogsTable";
 
-import SwapAIArtifact from "../contracts/SwapAI.json";
-import contractAddress from "../contracts/contract-address.json";
+import SwapAIContract from "../utils/swapai-contract";
 
 // list of network ids https://docs.metamask.io/guide/ethereum-provider.html#properties
 const KOVAN_ID = "42";
 const NETWORK_ERR_MSG = "Please connect Metamask to Kovan";
+
 class App extends React.Component {
   constructor(props) {
     super(props);
@@ -26,59 +28,35 @@ class App extends React.Component {
       selectedAddress: undefined,
       transactionError: undefined,
       networkError: undefined,
+      userRegistered: false,
       optInStatus: false,
-      blockchainMessages: [],
-      utils: undefined,
+      logs: [],
     };
 
     this.state = this.initialState;
   }
 
-  async intializeEthers() {
-    // We first initialize ethers by creating a provider using window.ethereum
-    this.provider = new ethers.providers.Web3Provider(window.ethereum);
-    if (window.ethereum.networkVersion === KOVAN_ID) {
-      this.swapAI = new ethers.Contract(
-        contractAddress.SwapAI,
-        SwapAIArtifact.abi,
-        this.provider.getSigner(0)
-      );
-      console.log("SwapAI Kovan address", contractAddress);
-    }
-    console.log("networkVersion", window.ethereum.networkVersion);
-    this.setState({
-      utils: new Utils(this.swapAI, this.state.selectedAddress, this.provider),
-    });
-  }
-
-  dismissNetworkError() {
-    this.setState({ networkError: undefined });
-  }
-
-  async initialize(userAddress) {
-    // This method initializes the dapp
-
-    // We first store the user's address in the component's state
-    this.setState({
-      selectedAddress: userAddress,
-    });
-
-    // Then, we initialize ethers
-    await this.intializeEthers();
-  }
-
   async connectWallet() {
-    //connects dapp to wallet when user clicks on connect wallet button
+    // Fetch the user's address
+    const [userAddress] = await window.ethereum.request({ method: 'eth_requestAccounts' });
 
-    const [selectedAddress] = await window.ethereum.enable();
-    console.log("selectedAddress", selectedAddress);
-    // Once we have the address, we can initialize the application.
+    // Check if the address is on Kovan testnet
+    if (window.ethereum.networkVersion !== KOVAN_ID) {
+      this.setState({
+        networkError: NETWORK_ERR_MSG,
+      });
 
-    if (!this.checkNetwork()) {
-      return;
+      return false;
     }
 
-    this.initialize(selectedAddress);
+    // Save the user's address in our state
+    this.setState({ selectedAddress: userAddress });
+
+    // Initialize the provider to initialize our contracts
+    this.provider = new ethers.providers.Web3Provider(window.ethereum);
+
+    // Initialize the swapping contract
+    this.swapperContract = new SwapAIContract(this.provider);
 
     // We reinitialize it whenever the user changes their account.
     window.ethereum.on("accountsChanged", ([newAddress]) => {
@@ -86,110 +64,126 @@ class App extends React.Component {
       // This happens when the user removes the Dapp from the "Connected
       // list of sites allowed access to your addresses" (Metamask > Settings > Connections)
       // To avoid errors, we reset the dapp state
-      if (newAddress === undefined) {
-        return this.resetState();
-      }
-
-      this.initialize(newAddress);
+      if (newAddress === undefined)
+        this.resetState();
+      else
+        this.setState({ selectedAddress: newAddress });
     });
 
     // We reset the dapp state if the network is changed
-    window.ethereum.on("networkChanged", () => {
+    window.ethereum.on("chainChanged", () => {
       this.resetState();
     });
+
+    return true;
   }
 
-  // This method resets the state
+  dismissNetworkError() {
+    this.setState({ networkError: undefined });
+  }
+
   resetState() {
     this.setState(this.initialState);
   }
 
-  // This method checks if Metamask selected network is Localhost:8545, mainnet, or Kovan
-  checkNetwork() {
-    if (window.ethereum.networkVersion === KOVAN_ID) {
-      return true;
-    }
+  //////////////////////////
+  // Contract interaction //
+  //////////////////////////
 
-    this.setState({
-      networkError: NETWORK_ERR_MSG,
-    });
+  async executeRegisterUser() {
+    const { success, isNewUser } = await this.swapperContract.registerUser();
 
-    return false;
-  }
-
-  async updateCreateUser() {
-    let createUserStatus = await this.state.utils.createUser();
-    console.log(
-      "updateCreateUser this.state.createUserStatus",
-      this.state.createUserStatus
-    );
     this.setState((prevState) => ({
-      blockchainMessages: [
-        ...prevState.blockchainMessages,
-        `User registration status: ${createUserStatus}`,
+      userRegistered: success,
+      logs: [
+        ...prevState.logs,
+        [
+          `User registration status: ${success ? 'success' : 'failure'}`,
+          `User account is ${isNewUser ? 'new' : 'existing'}`
+        ].join('\n'),
       ],
     }));
   }
 
-  async updateOptInToggle() {
-    let newOptInStatus = await this.state.utils.optInToggle();
+  async executeFetchUserBalance() {
+    const {
+      TUSD: tusdBalance,
+      WBTC: wbtcBalance,
+    } = await this.swapperContract.fetchUserBalance();
 
-    this.setState(
-      (prevState) => ({
-        optInStatus: newOptInStatus,
-        blockchainMessages: [
-          ...prevState.blockchainMessages,
-          `User opt-in status for auto-swapping TUSD <-> WBTC: ${this.state.optInStatus}`,
-        ],
-      }),
-      () => {
-        console.log(
-          "updateOptInToggle this.state.optInStatus",
-          this.state.optInStatus
-        );
-      }
-    );
-  }
-
-  async updateGetUserBalance() {
-    let userBalanceResultMap = await this.state.utils.getUserBalance(
-      this.state.selectedAddress
-    );
-    let tusdBalance = userBalanceResultMap[TUSD];
-    let wbtcBalance = userBalanceResultMap[WBTC];
     this.setState((prevState) => ({
-      blockchainMessages: [
-        ...prevState.blockchainMessages,
-        `${TUSD} balance: ${tusdBalance}, ${WBTC}: ${wbtcBalance}`,
+      logs: [
+        ...prevState.logs,
+        [
+          `TUSD Balance: ${tusdBalance}`,
+          `WBTC Balance: ${wbtcBalance}`
+        ].join('\n'),
       ],
     }));
   }
 
-  async updateAddDeposit(coinNameToDeposit) {
-    let addDepositResultMap = await this.state.utils.addDeposit(
-      coinNameToDeposit
-    );
-    let oldBalance = addDepositResultMap["oldBalance"];
-    let newBalance = addDepositResultMap["newBalance"];
+  async executeSetOptInStatus(userOptedIn) {
+    await this.swapperContract.setOptInStatus(userOptedIn);
+
     this.setState((prevState) => ({
-      blockchainMessages: [
-        ...prevState.blockchainMessages,
-        `${coinNameToDeposit}: ${oldBalance} -> ${newBalance} balance`,
+      optInStatus: userOptedIn,
+      logs: [
+        ...prevState.logs,
+        `User has opted-${userOptedIn ? 'in' : 'out'} for auto-swapping`,
       ],
+    }));
+  }
+
+  async executeDepositTUSD() {
+    const { oldBalance, newBalance } = await this.swapperContract.depositTUSD(10000);
+
+    this.setState((prevState) => ({
+      logs: [
+        ...prevState.logs,
+        `TUSD Balance: ${oldBalance} -> ${newBalance} balance`,
+      ],
+    }));
+  }
+
+  async executeDepositWBTC() {
+    const { oldBalance, newBalance } = await this.swapperContract.depositWBTC(10);
+
+    this.setState((prevState) => ({
+      logs: [
+        ...prevState.logs,
+        `WBTC Balance: ${oldBalance} -> ${newBalance} balance`,
+      ],
+    }));
+  }
+
+  async executeManualSwapUserBalance(swapToTUSD) {
+    const {
+      // success, toTUSD,
+      /*tusdRatio,*/ btcSentiment,
+      btcPriceCurrent, btcPricePrediction,
+      isNegativeFuture, isPositiveFuture
+    } = await this.swapperContract.manualSwapUserBalance(swapToTUSD);
+
+    this.setState((prevState) => ({
+      logs: [
+        ...prevState.logs,
+        [
+          // `TUSD asset/reserve ratio: ${tusdRatio}`,
+          `BTC 24 hour sentiment: ${(btcSentiment / 100)}%`,
+          `BTC current price: ${btcPriceCurrent / (10 ** 8)}`,
+          `BTC price in 24 hours: ${btcPricePrediction / (10 ** 8)}`,
+          `BTC very negative outlook prediction: ${isNegativeFuture}`,
+          `BTC very positive outlook prediction: ${isPositiveFuture}`,
+        ].join('\n'),
+      ]
     }));
   }
 
   async updateSwapSingleUserBalance(coinSwapFrom, coinSwapTo) {
     let swapSingleUserBalanceStatusMap =
-      await this.state.utils.swapSingleUserBalance(coinSwapFrom, coinSwapTo);
-    let tusdRatio,
-      btcSentiment,
-      btcPriceCurrent,
-      btcPricePrediction,
-      isNegativeFuture,
-      isPositiveFuture,
-      user;
-    [
+      await this.swapperContract.swapSingleUserBalance(coinSwapFrom, coinSwapTo);
+
+    const [
       tusdRatio,
       btcSentiment,
       btcPriceCurrent,
@@ -198,13 +192,15 @@ class App extends React.Component {
       isPositiveFuture,
       user,
     ] = swapSingleUserBalanceStatusMap;
+
     let userMsg = `address: ${user[0]}, BTC balance: ${(
       user[1] /
       10 ** 8
     ).toFixed(2)}, TUSD balance: ${(user[2] / 10 ** 18).toFixed(2)}`; // TODO: show optInStatus later
+
     this.setState((prevState) => ({
-      blockchainMessages: [
-        ...prevState.blockchainMessages,
+      logs: [
+        ...prevState.logs,
         `TUSD asset/reserve ratio: ${tusdRatio},\n
         BTC 24 hour sentiment in [negative, positive] range [-1,1]: ${btcSentiment},\n
         BTC current price: ${btcPriceCurrent},\n
@@ -219,7 +215,7 @@ class App extends React.Component {
   render() {
     // Ethereum wallets inject the window.ethereum object. If it hasn't been
     // injected, we instruct the user to install MetaMask.
-    if (window.ethereum === undefined) {
+    if (typeof window.ethereum === 'undefined') {
       return <NoWalletDetected />;
     }
 
@@ -233,53 +229,61 @@ class App extends React.Component {
       );
     }
 
-    let optInStatusLabel = this.state.optInStatus ? "Out of" : "In to";
+    let optInStatusLabel = (this.state.userRegistered && this.state.optInStatus) ? "Out of" : "In to";
 
     return (
-      <div
-        style={{
-          position: "absolute",
-          left: "50%",
-          top: "50%",
-          transform: "translate(-50%, -50%)",
-          display: "inline-block",
-        }}
-      >
-        <Grid container direction="row" justify="center" alignItems="center">
-          <GenericButton
-            onClick={() => this.updateCreateUser()}
-            label="Register Account"
-          />
-          <GenericButton
-            onClick={() => this.updateOptInToggle()}
-            label={`Opt ${optInStatusLabel} automatic swapping`}
-          />
-          <GenericButton
-            onClick={() => this.updateGetUserBalance()}
-            label="Refresh Balance"
-          />
-          <GenericButton
-            onClick={() => this.updateAddDeposit(TUSD)}
-            label="Deposit TUSD"
-          />
-          <GenericButton
-            onClick={() => this.updateAddDeposit(WBTC)}
-            label="Deposit WBTC"
-          />
-          <GenericButton
-            onClick={() => this.updateSwapDeposit(TUSD, WBTC)}
-            label="Force Swap TUSD -> WBTC"
-          />
-          <GenericButton
-            onClick={() => this.updateSwapDeposit(WBTC, TUSD)}
-            label="Force Swap TUSD -> WBTC"
-          />
-        </Grid>
-        <Grid container direction="row" justify="center" alignItems="center">
-          <BlockchainMessagesTable
-            blockchainMessages={this.state.blockchainMessages}
-          />
-        </Grid>
+      <div>
+        <Box sx={{ flexGrow: 1 }}>
+          <Grid container spacing={4} padding={4}>
+            <Grid item xs={8}>
+              <PriceChart />
+              <BlockchainLogsTable logs={this.state.logs} />
+            </Grid>
+
+            <Grid item xs={4}>
+              <GenericButton
+                onClick={() => this.executeRegisterUser()}
+                label="Register Account"
+              />
+
+              <GenericButton
+                onClick={() => this.executeSetOptInStatus(!this.state.optInStatus)}
+                /*disabled={!this.state.userRegistered}*/
+                label={`Opt ${optInStatusLabel} automatic swapping`}
+              />
+
+              <GenericButton
+                onClick={() => this.executeFetchUserBalance()}
+                /*disabled={!this.state.userRegistered}*/
+                label="Refresh Balance"
+              />
+
+              <GenericButton
+                onClick={() => this.executeDepositTUSD()}
+                /*disabled={!this.state.userRegistered}*/
+                label="Deposit TUSD"
+              />
+
+              <GenericButton
+                onClick={() => this.executeDepositWBTC()}
+                /*disabled={!this.state.userRegistered}*/
+                label="Deposit WBTC"
+              />
+
+              <GenericButton
+                onClick={() => this.executeManualSwapUserBalance(false)}
+                /*disabled={!(this.state.userRegistered)}*/
+                label="Force Swap TUSD -> WBTC"
+              />
+
+              <GenericButton
+                onClick={() => this.executeManualSwapUserBalance(true)}
+                /*disabled={!(this.state.userRegistered)}*/
+                label="Force Swap WBTC -> TUSD"
+              />
+            </Grid>
+          </Grid>
+        </Box>
       </div>
     );
   }
