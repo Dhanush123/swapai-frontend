@@ -1,6 +1,6 @@
-import React from "react";
+import React from 'react';
 
-import { AdvancedChart } from "react-tradingview-embed";
+import { AdvancedChart } from 'react-tradingview-embed';
 
 function PriceChart() {
   const clientTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -8,16 +8,16 @@ function PriceChart() {
   return (
     <AdvancedChart
       widgetProps={{
-        width: "100%",
-        height: "640",
-        // symbol: "COINBASE:BTCUSD",
-        symbol: "BINANCE:BTCTUSD",
-        range: "5D",
+        width: '100%',
+        height: '100%',
+        // symbol: 'COINBASE:BTCUSD',
+        symbol: 'BINANCE:BTCTUSD',
+        range: '5D',
         timezone: clientTimezone,
-        theme: "light",
-        style: "3",
-        locale: "en",
-        toolbar_bg: "#f1f3f6",
+        theme: 'light',
+        style: '3',
+        locale: 'en',
+        toolbar_bg: '#f1f3f6',
         enable_publishing: false,
         hide_top_toolbar: true,
         hide_side_toolbar: true,

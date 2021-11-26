@@ -1,8 +1,8 @@
-import React from "react";
-import PropTypes from "prop-types";
+import React from 'react';
+import PropTypes from 'prop-types';
 
-import Button from "@mui/material/Button";
-import Box from "@mui/material/Box";
+import Button from '@mui/material/Button';
+import Box from '@mui/material/Box';
 
 function GenericButton(props) {
   const colorStyle = {
@@ -11,10 +11,10 @@ function GenericButton(props) {
   }
 
   return (
-    <Box display="flex" justifyContent="space-between" m={1}>
+    <Box display='flex' justifyContent='space-between' m={1}>
       <Button
-        variant="contained"
-        size="medium"
+        variant='contained'
+        size='medium'
         style={colorStyle}
         onClick={props.onClick}
         disabled={props.disabled}

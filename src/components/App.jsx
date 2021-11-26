@@ -1,259 +1,236 @@
-import React from "react";
+import React, { useState } from 'react';
 
-import { ethers } from "ethers";
+import { ethers } from 'ethers';
 
-import Grid from "@mui/material/Grid";
-import Box from "@mui/material/Box";
+import Grid from '@mui/material/Grid';
+import Box from '@mui/material/Box';
 
-import PriceChart from "./PriceChart";
+import { useResizeDetector } from 'react-resize-detector';
 
-// import NavigationBar from "./NavigationBar";
-import GenericButton from "./GenericButton";
+import PriceChart from './PriceChart';
 
-import NoWalletDetected from "./NoWalletDetected";
-import ConnectWallet from "./ConnectWallet";
-import BlockchainLogsTable from "./BlockchainLogsTable";
+// import NavigationBar from './NavigationBar';
+import GenericButton from './GenericButton';
 
-import SwapAIContract from "../utils/swapai-contract";
+import NoWalletDetected from './NoWalletDetected';
+import ConnectWallet from './ConnectWallet';
+import BlockchainLogsTable from './BlockchainLogsTable';
+
+import SwapAIContract from '../utils/swapai-contract';
 
 // list of network ids https://docs.metamask.io/guide/ethereum-provider.html#properties
-const KOVAN_ID = "42";
-const NETWORK_ERR_MSG = "Please connect Metamask to Kovan";
+const KOVAN_ID = '42';
+const NETWORK_ERR_MSG = 'Please connect Metamask to Kovan';
 
-class App extends React.Component {
-  constructor(props) {
-    super(props);
+function App() {
+  const [walletAddress, setWalletAddress] = useState('');
+  // const [txnError, setTxnError] = useState('');
+  const [networkError, setNetworkError] = useState('');
+  const [userRegistered, setUserRegistered] = useState(false);
+  const [optInStatus, setOptInStatus] = useState(false);
+  const [logs, setLogs] = useState([]);
+  const [swapperContract, setSwapperContract] = useState(null);
 
-    this.initialState = {
-      selectedAddress: undefined,
-      transactionError: undefined,
-      networkError: undefined,
-      userRegistered: false,
-      optInStatus: false,
-      logs: [],
-    };
-
-    this.state = this.initialState;
-  }
-
-  async connectWallet() {
+  async function connectWallet() {
     // Fetch the user's address
     const [userAddress] = await window.ethereum.request({ method: 'eth_requestAccounts' });
 
     // Check if the address is on Kovan testnet
     if (window.ethereum.networkVersion !== KOVAN_ID) {
-      this.setState({
-        networkError: NETWORK_ERR_MSG,
-      });
-
+      setNetworkError(NETWORK_ERR_MSG);
       return false;
     }
 
     // Save the user's address in our state
-    this.setState({ selectedAddress: userAddress });
+    setWalletAddress(userAddress);
 
     // Initialize the provider to initialize our contracts
-    this.provider = new ethers.providers.Web3Provider(window.ethereum);
+    const provider = new ethers.providers.Web3Provider(window.ethereum);
 
     // Initialize the swapping contract
-    this.swapperContract = new SwapAIContract(this.provider);
+    setSwapperContract(new SwapAIContract(provider));
 
     // We reinitialize it whenever the user changes their account.
-    window.ethereum.on("accountsChanged", ([newAddress]) => {
+    window.ethereum.on('accountsChanged', ([newAddress]) => {
       // `accountsChanged` event can be triggered with an undefined newAddress.
-      // This happens when the user removes the Dapp from the "Connected
-      // list of sites allowed access to your addresses" (Metamask > Settings > Connections)
+      // This happens when the user removes the Dapp from the 'Connected
+      // list of sites allowed access to your addresses' (Metamask > Settings > Connections)
       // To avoid errors, we reset the dapp state
       if (newAddress === undefined)
-        this.resetState();
+        resetState();
       else
-        this.setState({ selectedAddress: newAddress });
+        setWalletAddress(newAddress);
     });
 
     // We reset the dapp state if the network is changed
-    window.ethereum.on("chainChanged", () => {
-      this.resetState();
-    });
+    window.ethereum.on('chainChanged', resetState);
 
     return true;
   }
 
-  dismissNetworkError() {
-    this.setState({ networkError: undefined });
-  }
-
-  resetState() {
-    this.setState(this.initialState);
+  function resetState() {
+    setWalletAddress('');
+    // setTxnError('');
+    setNetworkError('');
+    setUserRegistered(false);
+    setOptInStatus(false);
+    setLogs([]);
   }
 
   //////////////////////////
   // Contract interaction //
   //////////////////////////
 
-  async executeRegisterUser() {
-    const { success, isNewUser } = await this.swapperContract.registerUser();
+  async function executeRegisterUser() {
+    const { success, isNewUser } = await swapperContract.registerUser();
 
-    this.setState((prevState) => ({
-      userRegistered: success,
-      logs: [
-        ...prevState.logs,
-        [
-          `User registration status: ${success ? 'success' : 'failure'}`,
-          `User account is ${isNewUser ? 'new' : 'existing'}`
-        ].join('\n'),
-      ],
-    }));
+    setUserRegistered(success);
+    setLogs([
+      ...logs,
+      [
+        `User registration status: ${success ? 'success' : 'failure'}`,
+        `User account is ${isNewUser ? 'new' : 'existing'}`
+      ].join('\n')
+    ]);
   }
 
-  async executeFetchUserBalance() {
+  async function executeFetchUserBalance() {
     const {
       TUSD: tusdBalance,
       WBTC: wbtcBalance,
-    } = await this.swapperContract.fetchUserBalance();
+    } = await swapperContract.fetchUserBalance();
 
-    this.setState((prevState) => ({
-      logs: [
-        ...prevState.logs,
-        [
-          `TUSD Balance: ${tusdBalance}`,
-          `WBTC Balance: ${wbtcBalance}`
-        ].join('\n'),
-      ],
-    }));
+    setLogs([
+      ...logs,
+      [
+        `TUSD Balance: ${tusdBalance}`,
+        `WBTC Balance: ${wbtcBalance}`
+      ].join('\n')
+    ]);
   }
 
-  async executeSetOptInStatus(userOptedIn) {
-    await this.swapperContract.setOptInStatus(userOptedIn);
+  async function executeSetOptInStatus(userOptedIn) {
+    await swapperContract.setOptInStatus(userOptedIn);
 
-    this.setState((prevState) => ({
-      optInStatus: userOptedIn,
-      logs: [
-        ...prevState.logs,
-        `User has opted-${userOptedIn ? 'in' : 'out'} for auto-swapping`,
-      ],
-    }));
+    setOptInStatus(userOptedIn);
+    setLogs([
+      ...logs,
+      `User has opted-${userOptedIn ? 'in' : 'out'} for auto-swapping`
+    ]);
   }
 
-  async executeDepositTUSD() {
-    const { oldBalance, newBalance } = await this.swapperContract.depositTUSD(10000);
+  async function executeDepositTUSD() {
+    const { oldBalance, newBalance } = await swapperContract.depositTUSD(10000);
 
-    this.setState((prevState) => ({
-      logs: [
-        ...prevState.logs,
-        `TUSD Balance: ${oldBalance} -> ${newBalance} balance`,
-      ],
-    }));
+    setLogs([
+      ...logs,
+      `TUSD Balance: ${oldBalance} -> ${newBalance} balance`,
+    ]);
   }
 
-  async executeDepositWBTC() {
-    const { oldBalance, newBalance } = await this.swapperContract.depositWBTC(10);
+  async function executeDepositWBTC() {
+    const { oldBalance, newBalance } = await swapperContract.depositWBTC(10);
 
-    this.setState((prevState) => ({
-      logs: [
-        ...prevState.logs,
-        `WBTC Balance: ${oldBalance} -> ${newBalance} balance`,
-      ],
-    }));
+    setLogs([
+      ...logs,
+      `WBTC Balance: ${oldBalance} -> ${newBalance} balance`,
+    ]);
   }
 
-  async executeManualSwapUserBalance(swapToTUSD) {
+  async function executeManualSwapUserBalance(swapToTUSD) {
     const {
       // success, toTUSD,
       /*tusdRatio,*/ btcSentiment,
       btcPriceCurrent, btcPricePrediction,
       isNegativeFuture, isPositiveFuture
-    } = await this.swapperContract.manualSwapUserBalance(swapToTUSD);
+    } = await swapperContract.manualSwapUserBalance(swapToTUSD);
 
-    this.setState((prevState) => ({
-      logs: [
-        ...prevState.logs,
-        [
-          // `TUSD asset/reserve ratio: ${tusdRatio}`,
-          `BTC 24 hour sentiment: ${(btcSentiment / 100)}%`,
-          `BTC current price: ${btcPriceCurrent / (10 ** 8)}`,
-          `BTC price in 24 hours: ${btcPricePrediction / (10 ** 8)}`,
-          `BTC very negative outlook prediction: ${isNegativeFuture}`,
-          `BTC very positive outlook prediction: ${isPositiveFuture}`,
-        ].join('\n'),
-      ]
-    }));
+    setLogs([
+      ...logs,
+      [
+        // `TUSD asset/reserve ratio: ${tusdRatio}`,
+        `BTC 24 hour sentiment: ${(btcSentiment / 100)}%`,
+        `BTC current price: ${btcPriceCurrent / (10 ** 8)}`,
+        `BTC price in 24 hours: ${btcPricePrediction / (10 ** 8)}`,
+        `BTC very negative outlook prediction: ${isNegativeFuture}`,
+        `BTC very positive outlook prediction: ${isPositiveFuture}`,
+      ].join('\n'),
+    ]);
   }
 
-  render() {
-    // Ethereum wallets inject the window.ethereum object. If it hasn't been
-    // injected, we instruct the user to install MetaMask.
-    if (typeof window.ethereum === 'undefined') {
-      return <NoWalletDetected />;
-    }
+  // Ethereum wallets inject the window.ethereum object. If it hasn't been
+  // injected, we instruct the user to install MetaMask.
+  if (typeof window.ethereum === 'undefined') {
+    return <NoWalletDetected />;
+  }
 
-    if (!this.state.selectedAddress) {
-      return (
-        <ConnectWallet
-          connectWallet={() => this.connectWallet()}
-          networkError={this.state.networkError}
-          dismiss={() => this.dismissNetworkError()}
-        />
-      );
-    }
-
-    let optInStatusLabel = (this.state.userRegistered && this.state.optInStatus) ? "Out of" : "In to";
-
+  if (!walletAddress) {
     return (
-      <div>
-        <Box sx={{ flexGrow: 1 }}>
-          <Grid container spacing={4} padding={4}>
-            <Grid item xs={8}>
-              <PriceChart />
-              <BlockchainLogsTable logs={this.state.logs} />
-            </Grid>
-
-            <Grid item xs={4}>
-              <GenericButton
-                onClick={() => this.executeRegisterUser()}
-                label="Register Account"
-              />
-
-              <GenericButton
-                onClick={() => this.executeSetOptInStatus(!this.state.optInStatus)}
-                /*disabled={!this.state.userRegistered}*/
-                label={`Opt ${optInStatusLabel} automatic swapping`}
-              />
-
-              <GenericButton
-                onClick={() => this.executeFetchUserBalance()}
-                /*disabled={!this.state.userRegistered}*/
-                label="Refresh Balance"
-              />
-
-              <GenericButton
-                onClick={() => this.executeDepositTUSD()}
-                /*disabled={!this.state.userRegistered}*/
-                label="Deposit TUSD"
-              />
-
-              <GenericButton
-                onClick={() => this.executeDepositWBTC()}
-                /*disabled={!this.state.userRegistered}*/
-                label="Deposit WBTC"
-              />
-
-              <GenericButton
-                onClick={() => this.executeManualSwapUserBalance(false)}
-                /*disabled={!(this.state.userRegistered)}*/
-                label="Force Swap TUSD -> WBTC"
-              />
-
-              <GenericButton
-                onClick={() => this.executeManualSwapUserBalance(true)}
-                /*disabled={!(this.state.userRegistered)}*/
-                label="Force Swap WBTC -> TUSD"
-              />
-            </Grid>
-          </Grid>
-        </Box>
-      </div>
+      <ConnectWallet
+        connectWallet={() => connectWallet()}
+        networkError={networkError}
+        dismiss={() => setNetworkError('')}
+      />
     );
   }
+
+  let optInStatusLabel = (userRegistered && optInStatus) ? 'Out of' : 'In to';
+
+  // const { width, height, ref } = useResizeDetector();
+
+  return (
+    <Box sx={{ flexGrow: 1 }}>
+      <Grid container spacing={4} padding={4}>
+        <Grid item xs={8}>
+          <PriceChart />
+          <BlockchainLogsTable logs={logs} />
+        </Grid>
+
+        <Grid item xs={4}>
+          <GenericButton
+            onClick={() => executeRegisterUser()}
+            label='Register Account'
+          />
+
+          <GenericButton
+            onClick={() => executeSetOptInStatus(!optInStatus)}
+            /*disabled={!userRegistered}*/
+            label={`Opt ${optInStatusLabel} automatic swapping`}
+          />
+
+          <GenericButton
+            onClick={() => executeFetchUserBalance()}
+            /*disabled={!userRegistered}*/
+            label='Refresh Balance'
+          />
+
+          <GenericButton
+            onClick={() => executeDepositTUSD()}
+            /*disabled={!userRegistered}*/
+            label='Deposit TUSD'
+          />
+
+          <GenericButton
+            onClick={() => executeDepositWBTC()}
+            /*disabled={!userRegistered}*/
+            label='Deposit WBTC'
+          />
+
+          <GenericButton
+            onClick={() => executeManualSwapUserBalance(false)}
+            /*disabled={!userRegistered}*/
+            label='Force Swap TUSD -> WBTC'
+          />
+
+          <GenericButton
+            onClick={() => executeManualSwapUserBalance(true)}
+            /*disabled={!userRegistered}*/
+            label='Force Swap WBTC -> TUSD'
+          />
+        </Grid>
+      </Grid>
+    </Box>
+  );
 }
 
 export default App;

@@ -1,18 +1,18 @@
 /* eslint-disable react/prop-types */
-import React from "react";
+import React from 'react';
 
 function NetworkErrorMessage({ message, dismiss }) {
   return (
-    <div className="alert alert-danger" role="alert">
+    <div className='alert alert-danger' role='alert'>
       {message}
       <button
-        type="button"
-        className="close"
-        data-dismiss="alert"
-        aria-label="Close"
+        type='button'
+        className='close'
+        data-dismiss='alert'
+        aria-label='Close'
         onClick={dismiss}
       >
-        <span aria-hidden="true">&times;</span>
+        <span aria-hidden='true'>&times;</span>
       </button>
     </div>
   );

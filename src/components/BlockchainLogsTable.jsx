@@ -1,5 +1,5 @@
-import React from "react";
-import PropTypes from "prop-types";
+import React from 'react';
+import PropTypes from 'prop-types';
 
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
@@ -13,11 +13,9 @@ function BlockchainLogsTable(props) {
   if (props.logs === undefined)
     props.logs = [];
 
-  console.log(props.logs);
-
   return (
     <TableContainer component={Paper}>
-      <Table aria-label="simple table">
+      <Table aria-label='simple table'>
         <TableHead>
           <TableRow>
             <TableCell>Blockchain Logs</TableCell>
@@ -26,7 +24,7 @@ function BlockchainLogsTable(props) {
         <TableBody>
           {props.logs.map((message) => (
             <TableRow key={message+Math.random()}>
-              <TableCell component="th" scope="row" sx={{whiteSpace: 'pre'}}>
+              <TableCell component='th' scope='row' sx={{whiteSpace: 'pre'}}>
                 {message}
               </TableCell>
             </TableRow>

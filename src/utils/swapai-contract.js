@@ -1,4 +1,4 @@
-import { ethers } from "ethers";
+import { ethers } from 'ethers';
 import {
   MAX_GAS_LIMIT,
   TUSD_KOVAN_ADDRESS,
@@ -6,9 +6,9 @@ import {
   CONTRACT_ADDRESS,
   ERC20_TOKEN_ABI,
   SWAPAI_ABI,
-} from "./constants";
+} from './constants';
 
-import { waitForEvent } from "./utils";
+import { waitForEvent } from './utils';
 
 const BigNum = ethers.BigNumber;
 
