@@ -179,39 +179,6 @@ class App extends React.Component {
     }));
   }
 
-  async updateSwapSingleUserBalance(coinSwapFrom, coinSwapTo) {
-    let swapSingleUserBalanceStatusMap =
-      await this.swapperContract.swapSingleUserBalance(coinSwapFrom, coinSwapTo);
-
-    const [
-      tusdRatio,
-      btcSentiment,
-      btcPriceCurrent,
-      btcPricePrediction,
-      isNegativeFuture,
-      isPositiveFuture,
-      user,
-    ] = swapSingleUserBalanceStatusMap;
-
-    let userMsg = `address: ${user[0]}, BTC balance: ${(
-      user[1] /
-      10 ** 8
-    ).toFixed(2)}, TUSD balance: ${(user[2] / 10 ** 18).toFixed(2)}`; // TODO: show optInStatus later
-
-    this.setState((prevState) => ({
-      logs: [
-        ...prevState.logs,
-        `TUSD asset/reserve ratio: ${tusdRatio},\n
-        BTC 24 hour sentiment in [negative, positive] range [-1,1]: ${btcSentiment},\n
-        BTC current price: ${btcPriceCurrent},\n
-        BTC price 24 hour prediction: ${btcPricePrediction},\n
-        BTC very negative outlook prediction: ${isNegativeFuture},\n
-        BTC very positive outlook prediction: ${isPositiveFuture},\n
-        Swapped user data: ${userMsg}`,
-      ],
-    }));
-  }
-
   render() {
     // Ethereum wallets inject the window.ethereum object. If it hasn't been
     // injected, we instruct the user to install MetaMask.
