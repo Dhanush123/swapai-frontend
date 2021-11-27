@@ -38,13 +38,6 @@ class SwapAIContract {
     return await waitForEvent(this.swapAI, filter);
   }
 
-  async _tusdFactor() {
-    // TODO: Fetch decimals dynamically somehow
-    const tusdDecimals = 18; //await this.tusdToken.decimals();
-    const tusdFactor = BigNum.from(10).pow(BigNum.from(tusdDecimals));
-    return tusdFactor;
-  }
-
   async _wbtcFactor() {
     // TODO: Fetch decimals dynamically somehow
     const wbtcDecimals = 8; //await this.wbtcToken.decimals();
@@ -52,11 +45,22 @@ class SwapAIContract {
     return wbtcFactor;
   }
 
+  async _tusdFactor() {
+    // TODO: Fetch decimals dynamically somehow
+    const tusdDecimals = 18; //await this.tusdToken.decimals();
+    const tusdFactor = BigNum.from(10).pow(BigNum.from(tusdDecimals));
+    return tusdFactor;
+  }
+
   _formatCurrency(rawValue, decimals) {
     const formattedValue = ethers.utils.formatUnits(rawValue, decimals);
     const prettyValue = ethers.utils.commify(formattedValue);
     return prettyValue;
   }
+
+  ///////////////////////////
+  // User register / login //
+  ///////////////////////////
 
   async userExists() {
     await this.swapAI.userExists({ gasLimit: MAX_GAS_LIMIT });
@@ -72,13 +76,17 @@ class SwapAIContract {
     return { success, isNewUser };
   }
 
+  /////////////////////
+  // User attributes //
+  /////////////////////
+
   async fetchUserBalance() {
     await this.swapAI.fetchUserBalance({ gasLimit: MAX_GAS_LIMIT });
     const [tusdBalance, wbtcBalance] = await this._waitEvent(this.swapAI.filters.UserBalance());
 
     return {
-      'TUSD': this._formatCurrency(BigNum.from(tusdBalance), 18),
       'WBTC': this._formatCurrency(BigNum.from(wbtcBalance), 8),
+      'TUSD': this._formatCurrency(BigNum.from(tusdBalance), 18),
     };
   }
 
@@ -89,12 +97,20 @@ class SwapAIContract {
     return optInStatus;
   }
 
+  /////////////////////
+  // User management //
+  /////////////////////
+
   async setOptInStatus(wantedOptInStatus) {
     await this.swapAI.setOptInStatus(wantedOptInStatus, { gasLimit: MAX_GAS_LIMIT });
     const [newOptInStatus] = await this._waitEvent(this.swapAI.filters.OptInStatus());
 
     return newOptInStatus;
   }
+
+  ////////////////////////
+  // Balance depositing //
+  ////////////////////////
 
   async depositTUSD(depositAmount) {
     // First approve the contract to spend the TUSD on your behalf
@@ -126,22 +142,73 @@ class SwapAIContract {
     };
   }
 
-  async manualSwapUserBalance(_toTUSD) {
-    await this.swapAI.manualSwapUserBalance(_toTUSD, { gasLimit: MAX_GAS_LIMIT * 10 });
+  /////////////////////////////
+  // Manual balance swapping //
+  /////////////////////////////
+
+  async manualSwapUserToWBTC() {
+    await this.swapAI.manualSwapUserToWBTC({ gasLimit: MAX_GAS_LIMIT * 10 });
 
     const [
-      success,
-      toTUSD,
+      oldWbtcBalance, newWbtcBalance,
+      oldTusdBalance, newTusdBalance,
+    ] = await this._waitEvent(this.swapAI.filters.ManualSwap());
+
+    return {
+      WBTC: {
+        old: this._formatCurrency(BigNum.from(oldWbtcBalance), 8),
+        new: this._formatCurrency(BigNum.from(newWbtcBalance), 8),
+      },
+      TUSD: {
+        old: this._formatCurrency(BigNum.from(oldTusdBalance), 18),
+        new: this._formatCurrency(BigNum.from(newTusdBalance), 18),
+      },
+    }
+  }
+
+  async manualSwapUserToTUSD() {
+    await this.swapAI.manualSwapUserToTUSD({ gasLimit: MAX_GAS_LIMIT * 10 });
+
+    const [
+      oldWbtcBalance, newWbtcBalance,
+      oldTusdBalance, newTusdBalance,
+    ] = await this._waitEvent(this.swapAI.filters.ManualSwap());
+
+    return {
+      WBTC: {
+        old: this._formatCurrency(BigNum.from(oldWbtcBalance), 8),
+        new: this._formatCurrency(BigNum.from(newWbtcBalance), 8),
+      },
+      TUSD: {
+        old: this._formatCurrency(BigNum.from(oldTusdBalance), 18),
+        new: this._formatCurrency(BigNum.from(newTusdBalance), 18),
+      },
+    }
+  }
+
+  ////////////////////////////
+  // Prediction forecasting //
+  ////////////////////////////
+
+  async fetchPredictionForecast() {
+    console.log('testing...');
+
+    await this.swapAI.fetchPredictionForecast({ gasLimit: MAX_GAS_LIMIT });
+
+    console.log('waiting for prediction...');
+
+    const [
       // tusdRatio,
       btcSentiment,
       btcPriceCurrent,
       btcPricePrediction,
       isNegativeFuture,
       isPositiveFuture,
-    ] = await this._waitEvent(this.swapAI.filters.ManualSwap());
+    ] = await this._waitEvent(this.swapAI.filters.PredictionResults());
+
+    console.log('got something!!!!');
 
     return {
-      success, toTUSD,
       /*tusdRatio,*/ btcSentiment,
       btcPriceCurrent, btcPricePrediction,
       isNegativeFuture, isPositiveFuture,

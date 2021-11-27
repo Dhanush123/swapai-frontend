@@ -18,6 +18,7 @@ function GenericButton(props) {
         style={colorStyle}
         onClick={props.onClick}
         disabled={props.disabled}
+        sx={props.sx}
       >
         {props.label}
       </Button>

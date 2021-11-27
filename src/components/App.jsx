@@ -5,8 +5,6 @@ import { ethers } from 'ethers';
 import Grid from '@mui/material/Grid';
 import Box from '@mui/material/Box';
 
-import { useResizeDetector } from 'react-resize-detector';
-
 import PriceChart from './PriceChart';
 
 // import NavigationBar from './NavigationBar';
@@ -96,8 +94,8 @@ function App() {
 
   async function executeFetchUserBalance() {
     const {
-      TUSD: tusdBalance,
       WBTC: wbtcBalance,
+      TUSD: tusdBalance,
     } = await swapperContract.fetchUserBalance();
 
     setLogs([
@@ -137,13 +135,40 @@ function App() {
     ]);
   }
 
-  async function executeManualSwapUserBalance(swapToTUSD) {
+  async function executeManualSwapUserToWBTC() {
     const {
-      // success, toTUSD,
+      WBTC: wbtcBalance, TUSD: tusdBalance
+    } = await swapperContract.manualSwapUserToWBTC();
+
+    setLogs([
+      ...logs,
+      [
+        `TUSD Balance: ${tusdBalance.old} -> ${tusdBalance.new} balance`,
+        `WBTC Balance: ${wbtcBalance.old} -> ${wbtcBalance.new} balance`,
+      ].join('\n'),
+    ]);
+  }
+
+  async function executeManualSwapUserToTUSD() {
+    const {
+      WBTC: wbtcBalance, TUSD: tusdBalance
+    } = await swapperContract.manualSwapUserToTUSD();
+
+    setLogs([
+      ...logs,
+      [
+        `TUSD Balance: ${tusdBalance.old} -> ${tusdBalance.new} balance`,
+        `WBTC Balance: ${wbtcBalance.old} -> ${wbtcBalance.new} balance`,
+      ].join('\n'),
+    ]);
+  }
+
+  async function executeFetchPredictionForecast() {
+    const {
       /*tusdRatio,*/ btcSentiment,
       btcPriceCurrent, btcPricePrediction,
-      isNegativeFuture, isPositiveFuture
-    } = await swapperContract.manualSwapUserBalance(swapToTUSD);
+      isNegativeFuture, isPositiveFuture,
+    } = await swapperContract.fetchPredictionForecast();
 
     setLogs([
       ...logs,
@@ -176,57 +201,97 @@ function App() {
 
   let optInStatusLabel = (userRegistered && optInStatus) ? 'Out of' : 'In to';
 
-  // const { width, height, ref } = useResizeDetector();
-
   return (
     <Box sx={{ flexGrow: 1 }}>
-      <Grid container spacing={4} padding={4}>
+      <Grid container spacing={2} padding={4} sx={{ width: '100vw', height: '100vh' }}>
         <Grid item xs={8}>
-          <PriceChart />
-          <BlockchainLogsTable logs={logs} />
+          {/*<Stack>
+            <GenericButton
+              sx={{ width: '100%' }}
+              label='Register Account'
+            />
+          </Stack>*/}
+
+          <Box sx={{ maxHeight: '70%', pb: 1 }}>
+            <PriceChart />
+          </Box>
+
+          <Box sx={{ maxHeight: '30%' }}>
+            <BlockchainLogsTable logs={logs} />
+          </Box>
         </Grid>
 
-        <Grid item xs={4}>
-          <GenericButton
-            onClick={() => executeRegisterUser()}
-            label='Register Account'
-          />
+        <Grid item xs={4} padding={1}>
+          <Grid item xs={12}>
+            <GenericButton
+              sx={{ width: '100%' }}
+              onClick={() => executeRegisterUser()}
+              label='Register Account'
+            />
+          </Grid>
 
-          <GenericButton
-            onClick={() => executeSetOptInStatus(!optInStatus)}
-            /*disabled={!userRegistered}*/
-            label={`Opt ${optInStatusLabel} automatic swapping`}
-          />
+          <Grid item xs={12}>
+            <GenericButton
+              sx={{ width: '100%' }}
+              onClick={() => executeSetOptInStatus(!optInStatus)}
+              /*disabled={!userRegistered}*/
+              label={`Opt ${optInStatusLabel} automatic swapping`}
+            />
+          </Grid>
 
-          <GenericButton
-            onClick={() => executeFetchUserBalance()}
-            /*disabled={!userRegistered}*/
-            label='Refresh Balance'
-          />
+          <Grid item xs={12}>
+            <GenericButton
+              sx={{ width: '100%' }}
+              onClick={() => executeFetchUserBalance()}
+              /*disabled={!userRegistered}*/
+              label='Refresh Balance'
+            />
+          </Grid>
 
-          <GenericButton
-            onClick={() => executeDepositTUSD()}
-            /*disabled={!userRegistered}*/
-            label='Deposit TUSD'
-          />
+          <Grid item xs={12}>
+            <GenericButton
+              sx={{ width: '100%' }}
+              onClick={() => executeDepositTUSD()}
+              /*disabled={!userRegistered}*/
+              label='Deposit TUSD'
+            />
+          </Grid>
 
-          <GenericButton
-            onClick={() => executeDepositWBTC()}
-            /*disabled={!userRegistered}*/
-            label='Deposit WBTC'
-          />
+          <Grid item xs={12}>
+            <GenericButton
+              sx={{ width: '100%' }}
+              onClick={() => executeDepositWBTC()}
+              /*disabled={!userRegistered}*/
+              label='Deposit WBTC'
+            />
+          </Grid>
 
-          <GenericButton
-            onClick={() => executeManualSwapUserBalance(false)}
-            /*disabled={!userRegistered}*/
-            label='Force Swap TUSD -> WBTC'
-          />
+          <Grid item xs={12}>
+            <GenericButton
+              sx={{ width: '100%' }}
+              onClick={() => executeManualSwapUserToWBTC()}
+              /*disabled={!userRegistered}*/
+              label='Force Swap TUSD -> WBTC'
+            />
+          </Grid>
 
-          <GenericButton
-            onClick={() => executeManualSwapUserBalance(true)}
-            /*disabled={!userRegistered}*/
-            label='Force Swap WBTC -> TUSD'
-          />
+          <Grid item xs={12}>
+            <GenericButton
+              sx={{ width: '100%' }}
+              onClick={() => executeManualSwapUserToTUSD()}
+              /*disabled={!userRegistered}*/
+              label='Force Swap WBTC -> TUSD'
+            />
+          </Grid>
+
+          <Grid item xs={12}>
+            <GenericButton
+              sx={{ width: '100%' }}
+              onClick={() => executeFetchPredictionForecast()}
+              /*disabled={!userRegistered}*/
+              label='Fetch Prediction Forecast'
+            />
+          </Grid>
         </Grid>
       </Grid>
     </Box>
