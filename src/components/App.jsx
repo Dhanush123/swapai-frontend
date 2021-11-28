@@ -174,7 +174,7 @@ function App() {
       ...logs,
       [
         // `TUSD asset/reserve ratio: ${tusdRatio}`,
-        `BTC 24 hour sentiment: ${(btcSentiment / 100)}%`,
+        `BTC 24 hour sentiment in range [-1,1]/[negative,positive]: ${(btcSentiment / 100)}`,
         `BTC current price: ${btcPriceCurrent / (10 ** 8)}`,
         `BTC price in 24 hours: ${btcPricePrediction / (10 ** 8)}`,
         `BTC very negative outlook prediction: ${isNegativeFuture}`,
