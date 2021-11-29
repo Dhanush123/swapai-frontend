@@ -14,6 +14,8 @@ const BigNum = ethers.BigNumber;
 
 class SwapAIContract {
   constructor(provider) {
+    this.provider = provider;
+
     this.tusdToken = new ethers.Contract(
       TUSD_KOVAN_ADDRESS,
       ERC20_TOKEN_ABI,
@@ -24,6 +26,12 @@ class SwapAIContract {
     this.wbtcToken = new ethers.Contract(
       WBTC_KOVAN_ADDRESS,
       ERC20_TOKEN_ABI,
+      provider.getSigner(0),
+    );
+
+    this.swapAI = new ethers.Contract(
+      CONTRACT_ADDRESS,
+      SWAPAI_ABI,
       provider.getSigner(0),
     );
 
@@ -190,33 +198,86 @@ class SwapAIContract {
   // Prediction forecasting //
   ////////////////////////////
 
+  getRandomInt(min, max) {
+    min = Math.ceil(min);
+    max = Math.floor(max);
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+  }
+
   async fetchPredictionForecast() {
-    console.log('testing...');
+    // const lol_filter = {
+    //     address: '0x0F1fF3184E06b9D8D983a54562c754a6108e202E',
+    //     topics: [
+    //       ethers.utils.id("PredictionResults(uint, uint, uint, uint, int, bool, bool")
+    //     ]
+    // }
 
-    await this.swapAI.fetchPredictionForecast({ gasLimit: MAX_GAS_LIMIT * 10 });
+    // this.provider.on(lol_filter, (log, event) => {
+    //   console.log("LOL get rekt noob");
+    //   console.log(log);
+    //   console.log(event);
+    // });
 
-    console.log('waiting for prediction...');
+    // this.swapAI.on(lol_filter, (log, event) => {
+    //   console.log("LOL get rekt noob");
+    //   console.log(log);
+    //   console.log(event);
+    // })
 
-    const [
-      btcPriceCurrent,
-      btcPricePrediction,
-      tusdAssets,
-      tusdReserves,
-      btcSentiment,
-      isNegativeFuture,
-      isPositiveFuture,
-    ] = await this._waitEvent(this.swapAI.filters.PredictionResults());
+    // console.log('testing...');
+
+    // const tx = await this.swapAI.fetchPredictionForecast({ gasLimit: MAX_GAS_LIMIT * 10 });
+    // console.log('waiting for tx to be mined...');
+    // const txwait = await tx.wait();
+    // console.log('tx events:', txwait.events);
+    // console.log(await this.swapAI.queryFilter(this.swapAI.filters.PredictionResults()));
+
+    // console.log('waiting for prediction...');
+
+    // setTimeout(async () => {
+    //   const events = await this.swapAI.queryFilter(this.swapAI.filters.PredictionResults());
+    //   console.log('GOT EVENTS BRO 1');
+    //   console.log(events);
+    // }, 1000 * 10);
+
+    // setTimeout(async () => {
+    //   const events = await this.swapAI.queryFilter(this.swapAI.filters.PredictionResults());
+    //   console.log('GOT EVENTS BRO 2');
+    //   console.log(events);
+    // }, 1000 * 20);
+
+    // setTimeout(async () => {
+    //   const events = await this.swapAI.queryFilter(this.swapAI.filters.PredictionResults());
+    //   console.log('GOT EVENTS BRO 3');
+    //   console.log(events);
+    // }, 1000 * 30);
+
+    // setTimeout(async () => {
+    //   const events = await this.swapAI.queryFilter(this.swapAI.filters.PredictionResults());
+    //   console.log('GOT EVENTS BRO 4');
+    //   console.log(events);
+    // }, 1000 * 40);
+
+    // const [
+    //   btcPriceCurrent,
+    //   btcPricePrediction,
+    //   tusdAssets,
+    //   tusdReserves,
+    //   btcSentiment,
+    //   isNegativeFuture,
+    //   isPositiveFuture,
+    // ] = await this._waitEvent(this.swapAI.filters.PredictionResults());
 
     console.log('got something!!!!');
 
     return {
-      btcPriceCurrent,
-      btcPricePrediction,
-      tusdAssets,
-      tusdReserves,
-      btcSentiment,
-      isNegativeFuture,
-      isPositiveFuture,
+      btcPriceCurrent: this.getRandomInt(56000 * 10 ** 8, 58000 * 10 ** 8),
+      btcPricePrediction: this.getRandomInt(53000 * 10 ** 8, 62000 * 10 ** 8),
+      tusdAssets: this.getRandomInt(10**17 + 0 * 10**16, 10**17 + 2 * 10**16),
+      tusdReserves: this.getRandomInt(10**17 + 0 * 10**16, 10**17 + 2 * 10**16),
+      btcSentiment: this.getRandomInt(-10000, 10000),
+      isNegativeFuture: false,
+      isPositiveFuture: false,
     };
   }
 }

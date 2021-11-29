@@ -216,7 +216,7 @@ function App() {
             />
           </Stack>*/}
 
-          <Box sx={{ maxHeight: '70%', pb: 1 }}>
+          <Box sx={{ maxHeight: '640px', pb: 1 }}>
             <PriceChart />
           </Box>
 
