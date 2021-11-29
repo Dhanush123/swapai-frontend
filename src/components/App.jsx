@@ -165,18 +165,23 @@ function App() {
 
   async function executeFetchPredictionForecast() {
     const {
-      /*tusdRatio,*/ btcSentiment,
-      btcPriceCurrent, btcPricePrediction,
-      isNegativeFuture, isPositiveFuture,
+      btcPriceCurrent,
+      btcPricePrediction,
+      tusdAssets,
+      tusdReserves,
+      btcSentiment,
+      isNegativeFuture,
+      isPositiveFuture,
     } = await swapperContract.fetchPredictionForecast();
 
     setLogs([
       ...logs,
       [
         // `TUSD asset/reserve ratio: ${tusdRatio}`,
-        `BTC 24 hour sentiment: ${(btcSentiment / 100)}%`,
         `BTC current price: ${btcPriceCurrent / (10 ** 8)}`,
         `BTC price in 24 hours: ${btcPricePrediction / (10 ** 8)}`,
+        `TUSD asset:reserve ratio: ${(tusdAssets / tusdReserves).toFixed(2)}`,
+        `BTC 24 hour sentiment: ${(btcSentiment / 100)}%`,
         `BTC very negative outlook prediction: ${isNegativeFuture}`,
         `BTC very positive outlook prediction: ${isPositiveFuture}`,
       ].join('\n'),

@@ -193,15 +193,16 @@ class SwapAIContract {
   async fetchPredictionForecast() {
     console.log('testing...');
 
-    await this.swapAI.fetchPredictionForecast({ gasLimit: MAX_GAS_LIMIT });
+    await this.swapAI.fetchPredictionForecast({ gasLimit: MAX_GAS_LIMIT * 10 });
 
     console.log('waiting for prediction...');
 
     const [
-      // tusdRatio,
-      btcSentiment,
       btcPriceCurrent,
       btcPricePrediction,
+      tusdAssets,
+      tusdReserves,
+      btcSentiment,
       isNegativeFuture,
       isPositiveFuture,
     ] = await this._waitEvent(this.swapAI.filters.PredictionResults());
@@ -209,9 +210,13 @@ class SwapAIContract {
     console.log('got something!!!!');
 
     return {
-      /*tusdRatio,*/ btcSentiment,
-      btcPriceCurrent, btcPricePrediction,
-      isNegativeFuture, isPositiveFuture,
+      btcPriceCurrent,
+      btcPricePrediction,
+      tusdAssets,
+      tusdReserves,
+      btcSentiment,
+      isNegativeFuture,
+      isPositiveFuture,
     };
   }
 }
