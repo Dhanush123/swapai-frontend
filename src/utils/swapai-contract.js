@@ -8,7 +8,7 @@ import {
   SWAPAI_ABI,
 } from './constants';
 
-import { waitForEvent, sleep } from './utils';
+import { waitForEvent } from './utils';
 
 const BigNum = ethers.BigNumber;
 
@@ -207,28 +207,24 @@ class SwapAIContract {
   async fetchPredictionForecast() {
     await this.swapAI.fetchPredictionForecast({ gasLimit: MAX_GAS_LIMIT * 10 });
 
-    await sleep(5000);
-
-    // const [
-    //   btcPriceCurrent,
-    //   btcPricePrediction,
-    //   tusdAssets,
-    //   tusdReserves,
-    //   btcSentiment,
-    //   isNegativeFuture,
-    //   isPositiveFuture,
-    // ] = await this._waitEvent(this.swapAI.filters.PredictionResults());
-
-    console.log('got something!!!!');
+    const [
+      btcPriceCurrent,
+      btcPricePrediction,
+      tusdAssets,
+      tusdReserves,
+      btcSentiment,
+      isNegativeFuture,
+      isPositiveFuture,
+    ] = await this._waitEvent(this.swapAI.filters.PredictionResults());
 
     return {
-      btcPriceCurrent: this.getRandomInt(56000 * 10 ** 8, 58000 * 10 ** 8),
-      btcPricePrediction: this.getRandomInt(53000 * 10 ** 8, 62000 * 10 ** 8),
-      tusdAssets: this.getRandomInt(10**17 + 0 * 10**16, 10**17 + 2 * 10**16),
-      tusdReserves: this.getRandomInt(10**17 + 0 * 10**16, 10**17 + 2 * 10**16),
-      btcSentiment: this.getRandomInt(-10000, 10000),
-      isNegativeFuture: false,
-      isPositiveFuture: false,
+      btcPriceCurrent,
+      btcPricePrediction,
+      tusdAssets,
+      tusdReserves,
+      btcSentiment,
+      isNegativeFuture,
+      isPositiveFuture,
     };
   }
 }
