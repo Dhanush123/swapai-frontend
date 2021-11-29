@@ -1,11 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 import { ethers } from 'ethers';
 
-import Grid from '@mui/material/Grid';
 import Box from '@mui/material/Box';
+import Stack from '@mui/material/Stack';
+import Grid from '@mui/material/Grid';
+import Typography from "@mui/material/Typography";
 
-import PriceChart from './PriceChart';
+import PriceFeedChart from './PriceFeedChart';
 
 // import NavigationBar from './NavigationBar';
 import GenericButton from './GenericButton';
@@ -15,6 +17,10 @@ import ConnectWallet from './ConnectWallet';
 import BlockchainLogsTable from './BlockchainLogsTable';
 
 import SwapAIContract from '../utils/swapai-contract';
+
+import ChainlinkPriceFeedAPI from '../utils/ChainlinkPriceFeedAPI';
+
+import { PRICE_FEED_BTC_ADDRESS, BTC_DECIMALS } from '../utils/constants';
 
 // list of network ids https://docs.metamask.io/guide/ethereum-provider.html#properties
 const KOVAN_ID = '42';
@@ -28,6 +34,19 @@ function App() {
   const [optInStatus, setOptInStatus] = useState(false);
   const [logs, setLogs] = useState([]);
   const [swapperContract, setSwapperContract] = useState(null);
+
+  const [priceFeedData, setPriceFeedData] = useState([]);
+
+  useEffect(() => {
+    const priceFeedAPI = new ChainlinkPriceFeedAPI(PRICE_FEED_BTC_ADDRESS, BTC_DECIMALS);
+
+    const fetchData = async () => {
+      const data = await priceFeedAPI.fetchHistoricPrices(60 * 60 * 24 * 7);
+      setPriceFeedData(data);
+    };
+
+    fetchData();
+  }, []);
 
   async function connectWallet() {
     // Fetch the user's address
@@ -209,93 +228,112 @@ function App() {
     <Box sx={{ flexGrow: 1 }}>
       <Grid container spacing={2} padding={4} sx={{ width: '100vw', height: '100vh' }}>
         <Grid item xs={8}>
-          {/*<Stack>
-            <GenericButton
-              sx={{ width: '100%' }}
-              label='Register Account'
-            />
-          </Stack>*/}
-
-          <Box sx={{ maxHeight: '640px', pb: 1 }}>
-            <PriceChart />
-          </Box>
-
-          <Box sx={{ maxHeight: '30%' }}>
-            <BlockchainLogsTable logs={logs} />
+          <Box sx={{ height: '100%', pb: 1 }}>
+            <PriceFeedChart data={priceFeedData} height="500%" />
           </Box>
         </Grid>
 
         <Grid item xs={4} padding={1}>
-          <Grid item xs={12}>
-            <GenericButton
-              sx={{ width: '100%' }}
-              onClick={() => executeRegisterUser()}
-              label='Register Account'
-            />
-          </Grid>
+          <Box sx={{ height: '50%' }}>
+            <Typography variant="h5" component="div">
+              Manage Account
+            </Typography>
 
-          <Grid item xs={12}>
-            <GenericButton
-              sx={{ width: '100%' }}
-              onClick={() => executeSetOptInStatus(!optInStatus)}
-              /*disabled={!userRegistered}*/
-              label={`Opt ${optInStatusLabel} automatic swapping`}
-            />
-          </Grid>
+            <Stack direction="row">
+              <Grid item xs={6}>
+                <GenericButton
+                  sx={{ width: '100%' }}
+                  onClick={() => executeRegisterUser()}
+                  label='Register Account'
+                />
+              </Grid>
 
-          <Grid item xs={12}>
-            <GenericButton
-              sx={{ width: '100%' }}
-              onClick={() => executeFetchUserBalance()}
-              /*disabled={!userRegistered}*/
-              label='Refresh Balance'
-            />
-          </Grid>
+              <Grid item xs={6}>
+                <GenericButton
+                  sx={{ width: '100%' }}
+                  onClick={() => executeSetOptInStatus(!optInStatus)}
+                  /*disabled={!userRegistered}*/
+                  label={`Opt ${optInStatusLabel} auto swapping`}
+                />
+              </Grid>
+            </Stack>
 
-          <Grid item xs={12}>
-            <GenericButton
-              sx={{ width: '100%' }}
-              onClick={() => executeDepositTUSD()}
-              /*disabled={!userRegistered}*/
-              label='Deposit TUSD'
-            />
-          </Grid>
+            <Typography variant="h5" component="div">
+              Deposit Funds
+            </Typography>
 
-          <Grid item xs={12}>
-            <GenericButton
-              sx={{ width: '100%' }}
-              onClick={() => executeDepositWBTC()}
-              /*disabled={!userRegistered}*/
-              label='Deposit WBTC'
-            />
-          </Grid>
+            <Stack direction="row">
+              <Grid item xs={4}>
+                <GenericButton
+                  sx={{ width: '100%' }}
+                  onClick={() => executeDepositTUSD()}
+                  /*disabled={!userRegistered}*/
+                  label='Deposit TUSD'
+                />
+              </Grid>
 
-          <Grid item xs={12}>
-            <GenericButton
-              sx={{ width: '100%' }}
-              onClick={() => executeManualSwapUserToWBTC()}
-              /*disabled={!userRegistered}*/
-              label='Force Swap TUSD -> WBTC'
-            />
-          </Grid>
+              <Grid item xs={4}>
+                <GenericButton
+                  sx={{ width: '100%' }}
+                  onClick={() => executeDepositWBTC()}
+                  /*disabled={!userRegistered}*/
+                  label='Deposit WBTC'
+                />
+              </Grid>
 
-          <Grid item xs={12}>
-            <GenericButton
-              sx={{ width: '100%' }}
-              onClick={() => executeManualSwapUserToTUSD()}
-              /*disabled={!userRegistered}*/
-              label='Force Swap WBTC -> TUSD'
-            />
-          </Grid>
+              <Grid item xs={4}>
+                <GenericButton
+                  sx={{ width: '100%' }}
+                  onClick={() => executeFetchUserBalance()}
+                  /*disabled={!userRegistered}*/
+                  label='Refresh Balance'
+                />
+              </Grid>
+            </Stack>
 
-          <Grid item xs={12}>
-            <GenericButton
-              sx={{ width: '100%' }}
-              onClick={() => executeFetchPredictionForecast()}
-              /*disabled={!userRegistered}*/
-              label='Fetch Prediction Forecast'
-            />
-          </Grid>
+            <Typography variant="h5" component="div">
+              Swap Funds
+            </Typography>
+
+            <Stack direction="row">
+              <Grid item xs={6}>
+                <GenericButton
+                  sx={{ width: '100%' }}
+                  onClick={() => executeManualSwapUserToWBTC()}
+                  /*disabled={!userRegistered}*/
+                  label='Force Swap TUSD -> WBTC'
+                />
+              </Grid>
+
+              <Grid item xs={6}>
+                <GenericButton
+                  sx={{ width: '100%' }}
+                  onClick={() => executeManualSwapUserToTUSD()}
+                  /*disabled={!userRegistered}*/
+                  label='Force Swap WBTC -> TUSD'
+                />
+              </Grid>
+            </Stack>
+
+            <Typography variant="h5" component="div">
+              Debug
+            </Typography>
+
+            <Stack direction="row">
+              <Grid item xs={12}>
+                <GenericButton
+                  sx={{ width: '100%' }}
+                  onClick={() => executeFetchPredictionForecast()}
+                  /*disabled={!userRegistered}*/
+                  label='Fetch Prediction Forecast'
+                />
+              </Grid>
+            </Stack>
+          </Box>
+
+          <Box sx={{ maxHeight: '50%' }}>
+            <BlockchainLogsTable logs={logs} />
+          </Box>
         </Grid>
       </Grid>
     </Box>

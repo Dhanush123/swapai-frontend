@@ -2,7 +2,7 @@ import React from 'react';
 
 import { AdvancedChart } from 'react-tradingview-embed';
 
-function PriceChart() {
+function TradingViewPriceChart() {
   const clientTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
   return (
@@ -29,4 +29,4 @@ function PriceChart() {
   );
 }
 
-export default React.memo(PriceChart);
+export default React.memo(TradingViewPriceChart);
