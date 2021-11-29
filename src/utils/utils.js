@@ -6,4 +6,10 @@ async function waitForEvent(contract, filter) {
   });
 }
 
-export { waitForEvent };
+async function sleep(ms) {
+  return new Promise(resolve => {
+    setTimeout(resolve, ms);
+  });
+}
+
+export { waitForEvent, sleep };

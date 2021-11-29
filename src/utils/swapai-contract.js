@@ -8,7 +8,7 @@ import {
   SWAPAI_ABI,
 } from './constants';
 
-import { waitForEvent } from './utils';
+import { waitForEvent, sleep } from './utils';
 
 const BigNum = ethers.BigNumber;
 
@@ -205,58 +205,9 @@ class SwapAIContract {
   }
 
   async fetchPredictionForecast() {
-    // const lol_filter = {
-    //     address: '0x0F1fF3184E06b9D8D983a54562c754a6108e202E',
-    //     topics: [
-    //       ethers.utils.id("PredictionResults(uint, uint, uint, uint, int, bool, bool")
-    //     ]
-    // }
+    await this.swapAI.fetchPredictionForecast({ gasLimit: MAX_GAS_LIMIT * 10 });
 
-    // this.provider.on(lol_filter, (log, event) => {
-    //   console.log("LOL get rekt noob");
-    //   console.log(log);
-    //   console.log(event);
-    // });
-
-    // this.swapAI.on(lol_filter, (log, event) => {
-    //   console.log("LOL get rekt noob");
-    //   console.log(log);
-    //   console.log(event);
-    // })
-
-    // console.log('testing...');
-
-    // const tx = await this.swapAI.fetchPredictionForecast({ gasLimit: MAX_GAS_LIMIT * 10 });
-    // console.log('waiting for tx to be mined...');
-    // const txwait = await tx.wait();
-    // console.log('tx events:', txwait.events);
-    // console.log(await this.swapAI.queryFilter(this.swapAI.filters.PredictionResults()));
-
-    // console.log('waiting for prediction...');
-
-    // setTimeout(async () => {
-    //   const events = await this.swapAI.queryFilter(this.swapAI.filters.PredictionResults());
-    //   console.log('GOT EVENTS BRO 1');
-    //   console.log(events);
-    // }, 1000 * 10);
-
-    // setTimeout(async () => {
-    //   const events = await this.swapAI.queryFilter(this.swapAI.filters.PredictionResults());
-    //   console.log('GOT EVENTS BRO 2');
-    //   console.log(events);
-    // }, 1000 * 20);
-
-    // setTimeout(async () => {
-    //   const events = await this.swapAI.queryFilter(this.swapAI.filters.PredictionResults());
-    //   console.log('GOT EVENTS BRO 3');
-    //   console.log(events);
-    // }, 1000 * 30);
-
-    // setTimeout(async () => {
-    //   const events = await this.swapAI.queryFilter(this.swapAI.filters.PredictionResults());
-    //   console.log('GOT EVENTS BRO 4');
-    //   console.log(events);
-    // }, 1000 * 40);
+    await sleep(5000);
 
     // const [
     //   btcPriceCurrent,
