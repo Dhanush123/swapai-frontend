@@ -177,7 +177,6 @@ function App() {
     setLogs([
       ...logs,
       [
-        // `TUSD asset/reserve ratio: ${tusdRatio}`,
         `BTC current price: ${btcPriceCurrent / (10 ** 8)}`,
         `BTC price in 24 hours: ${btcPricePrediction / (10 ** 8)}`,
         `TUSD asset:reserve ratio: ${(tusdAssets / tusdReserves).toFixed(2)}`,
